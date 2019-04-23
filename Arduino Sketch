@@ -1,0 +1,192 @@
+/*
+  ELEC1100 Lab06
+
+  To program the car turning left at split
+
+*/
+
+// assign meaningful names to those pins that will be used
+#define pinLeftSensor A5      //pin A5
+#define pinRightSensor A3     //pin A3
+#define pinFrontSensor A4     //pin A4
+
+#define pinLQ3 3              //pin D3
+#define pinLQ2 4              //pin D4
+#define pinLQ1 5              //pin D5
+#define pinLQ0 6              //pin D6
+
+#define pinRQ3 7              //pin D7
+#define pinRQ2 8              //pin D8
+#define pinRQ1 9              //pin D9
+#define pinRQ0 10             //pin D10
+
+#define pinLdir 11            //pin D11
+#define pinRdir 12            //pin D12
+
+//define variables to be used in script
+int leftSensor = 1;
+int rightSensor = 1;
+int frontSensor = 1;
+
+unsigned long time;
+unsigned long start_time;
+bool started = false;
+bool turning = false;
+
+// the setup function runs once when you press reset or power the board
+void setup() {
+  Serial.begin(9600);
+  
+  // define pins as input and output.
+  pinMode(pinLeftSensor, INPUT);
+  pinMode(pinRightSensor, INPUT);
+  pinMode(pinFrontSensor, INPUT);
+
+  pinMode(pinLQ3, OUTPUT);
+  pinMode(pinLQ2, OUTPUT);
+  pinMode(pinLQ1, OUTPUT);
+  pinMode(pinLQ0, OUTPUT);
+
+  pinMode(pinRQ3, OUTPUT);
+  pinMode(pinRQ2, OUTPUT);
+  pinMode(pinRQ1, OUTPUT);
+  pinMode(pinRQ0, OUTPUT);
+
+  pinMode(pinLdir, OUTPUT);
+  pinMode(pinRdir, OUTPUT);
+
+  // initialize output pins.
+  /*
+  digitalWrite(pinLQ3, HIGH);
+  digitalWrite(pinLQ2, HIGH);
+  digitalWrite(pinLQ1, HIGH);
+  digitalWrite(pinLQ0, HIGH);
+  digitalWrite(pinRQ3, HIGH);
+  digitalWrite(pinRQ2, HIGH);
+  digitalWrite(pinRQ1, HIGH);
+  digitalWrite(pinRQ0, HIGH);
+  */
+  left_motor_set_speed(0);
+  right_motor_set_speed(0);
+  
+  digitalWrite(pinLdir, HIGH);        // HIGH: move forward
+  digitalWrite(pinRdir, HIGH);        // LOW:  move backward
+}
+
+// the loop function runs over and over again forever
+void loop() {
+  
+  // update sensor
+  leftSensor = digitalRead(pinLeftSensor);
+  rightSensor = digitalRead(pinRightSensor);
+  frontSensor =  digitalRead(pinFrontSensor);
+
+  // update timer
+  time = millis();
+  Serial.println(time);
+
+
+  
+  /////////////////////// make decision/turning////////////////////////////
+  
+  // start when frontSensor sense sth
+  if (!frontSensor && !started) {
+    if (time - start_time < 12000){
+      start_time = millis();
+      left_motor_set_speed(15);
+      right_motor_set_speed(15);
+      started = true;
+    }
+  }
+
+//      digitalWrite(pinLdir, LOW);
+//      digitalWrite(pinRdir, HIGH);
+//      left_motor_set_speed(15);
+//      right_motor_set_speed(15);
+//      delay(1000);
+//      turning = true;
+
+  
+  // go forward
+  if ( leftSensor && rightSensor && started && !turning) {
+    digitalWrite(pinLdir, HIGH);
+    digitalWrite(pinRdir, HIGH);
+    left_motor_set_speed(15);
+    right_motor_set_speed(15);
+  }
+  
+  // too right ==> turn left
+  if ( !leftSensor && rightSensor && started && !turning) {
+    if (time - start_time < 12000){
+      digitalWrite(pinLdir, LOW);
+      digitalWrite(pinRdir, HIGH);
+      left_motor_set_speed(10);
+      right_motor_set_speed(15);
+    }
+    else{
+      digitalWrite(pinLdir, LOW);
+      digitalWrite(pinRdir, HIGH);
+      left_motor_set_speed(10);
+      right_motor_set_speed(15);
+    }
+    
+  }
+  // too left ==> turn right
+  if ( leftSensor && !rightSensor && started && !turning) {
+    if (time - start_time < 12000){
+      digitalWrite(pinLdir, HIGH);
+      digitalWrite(pinRdir, LOW);
+      left_motor_set_speed(15);
+      right_motor_set_speed(10);
+    }
+    else {
+      digitalWrite(pinLdir, HIGH);
+      digitalWrite(pinRdir, LOW);
+      left_motor_set_speed(15);
+      right_motor_set_speed(10);
+    }
+  }
+  
+  // crossroad
+  if ( !leftSensor && !rightSensor && started && !turning) {
+    if (time - start_time < 12000){
+      Serial.println("Choice 1");
+      digitalWrite(pinLdir, LOW);
+      digitalWrite(pinRdir, HIGH);
+      left_motor_set_speed(10);
+      right_motor_set_speed(15);
+    }
+    else {
+      Serial.println("Choice 2");
+      digitalWrite(pinLdir, HIGH);
+      digitalWrite(pinRdir, LOW);
+      left_motor_set_speed(15);
+      right_motor_set_speed(10);
+    }
+    
+  }
+
+}
+
+
+
+
+void left_motor_set_speed (int power) {
+    digitalWrite(pinLQ0, power%2);
+    power /= 2;
+    digitalWrite(pinLQ1, power%2);
+    power /= 2;
+    digitalWrite(pinLQ2, power%2);
+    power /= 2;
+    digitalWrite(pinLQ3, power%2);
+}
+
+void right_motor_set_speed (int power) {
+    digitalWrite(pinRQ0, power%2);
+    power /= 2;
+    digitalWrite(pinRQ1, power%2);
+    power /= 2;
+    digitalWrite(pinRQ2, power%2);
+    power /= 2;
+    digitalWrite(pinRQ3, power%2);
+}
