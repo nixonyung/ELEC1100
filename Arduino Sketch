@@ -33,6 +33,7 @@ int frontSensor = 1;
 unsigned long time;
 unsigned long start_time;
 bool started = false;
+bool stopped = false;
 int counter = 0;
 
 // the setup function runs once when you press reset or power the board
@@ -66,107 +67,133 @@ void setup() {
 
 // the loop function runs over and over again forever
 void loop() {
+  if (!stopped){
+    
+    // update sensor
+    leftSensor = digitalRead(pinLeftSensor);
+    rightSensor = digitalRead(pinRightSensor);
+    middleSensor = digitalRead(pinMiddleSensor);
+    frontSensor =  digitalRead(pinFrontSensor);
   
-  // update sensor
-  leftSensor = digitalRead(pinLeftSensor);
-  rightSensor = digitalRead(pinRightSensor);
-  middleSensor = digitalRead(pinMiddleSensor);
-  frontSensor =  digitalRead(pinFrontSensor);
-
-  // update timer
-  time = millis();
-  Serial.println(time);
-
-
+    // update timer
+    time = millis();
+    Serial.println(time);
   
-  /////////////////////// make decision/turning////////////////////////////
   
-  // start when frontSensor sense sth
-  if (!frontSensor && !started) {
-    start_time = millis();
-    left_motor_set_speed(15);
-    right_motor_set_speed(15);
-    started = true;
-  }
-  
-  // go forward
-  if ( leftSensor && rightSensor && started) {
-    left_motor_set_speed(15);
-    right_motor_set_speed(15);
-  }
-  
-  // too right ==> turn left
-  if ( !leftSensor && rightSensor && started) {
-    // normal turn
-    if (!middleSensor && counter == 0){
-      left_motor_set_speed(9);
-      right_motor_set_speed(15);
-    }
-    else if (!middleSensor && counter == 1){
-      left_motor_set_speed(0);
-      right_motor_set_speed(12);
-    }
-    else if (!middleSensor && counter == 2){
-      left_motor_set_speed(0);
-      right_motor_set_speed(9);
-    }
-    else{
-      left_motor_set_speed(-10);
-      right_motor_set_speed(15);
-    }
-  }
-  
-  // too left ==> turn right
-  if ( leftSensor && !rightSensor && started) {
-    // normal turn
-    if (!middleSensor && counter == 0){
+    
+    /////////////////////// make decision/turning////////////////////////////
+    
+    // start when frontSensor sense sth
+    if (!frontSensor && !started) {
+      start_time = millis();
       left_motor_set_speed(15);
-      right_motor_set_speed(9);
+      right_motor_set_speed(15);
+      started = true;
     }
-    else if (!middleSensor && counter == 1){
-      left_motor_set_speed(12);
-      right_motor_set_speed(0);
-    }
-    else if (!middleSensor && counter == 2){
-      left_motor_set_speed(9);
-      right_motor_set_speed(0);
-    }
-    else{
+  
+    if (!frontSensor && started && counter > 2){
+      left_motor_set_speed(-15);
+      right_motor_set_speed(15);
+      delay(500);
       left_motor_set_speed(15);
-      right_motor_set_speed(-10);
+      right_motor_set_speed(15);
+      delay(3000);
+      left_motor_set_speed(0);
+      right_motor_set_speed(0);
+      stopped = true;
     }
     
-  }
-  
-  // crossroad
-  if ( !leftSensor && !rightSensor && started) {
-    STOP();
-    
-    if (time - start_time < 12000){
-      left_motor_set_speed(2);
+    // go forward
+    if ( leftSensor && rightSensor && started) {
+      left_motor_set_speed(15);
       right_motor_set_speed(15);
-      while(!rightSensor){
-        rightSensor = digitalRead(pinRightSensor);
+    }
+    
+    // too right ==> turn left
+    if ( !leftSensor && rightSensor && started) {
+      // normal turn
+      if (counter == 0){
+        left_motor_set_speed(9);
+        right_motor_set_speed(15);
       }
-      left_motor_set_speed(-6);
-      right_motor_set_speed(15);
-      while(rightSensor){
-        rightSensor = digitalRead(pinRightSensor);
+      else if (counter == 1){
+        left_motor_set_speed(0);
+        right_motor_set_speed(12);
+      }
+      else if (counter == 2){
+        left_motor_set_speed(0);
+        right_motor_set_speed(9);
+      }
+      else if (!middleSensor){
+        left_motor_set_speed(0);
+        right_motor_set_speed(9);
+      }
+      else {
+        left_motor_set_speed(-9);
+        right_motor_set_speed(9);
+      }
+    }
+    
+    // too left ==> turn right
+    if ( leftSensor && !rightSensor && started) {
+      // normal turn
+      if (counter == 0){
+        left_motor_set_speed(15);
+        right_motor_set_speed(9);
+      }
+      else if (counter == 1){
+        left_motor_set_speed(12);
+        right_motor_set_speed(0);
+      }
+      else if (counter == 2){
+        left_motor_set_speed(9);
+        right_motor_set_speed(0);
+      }
+      else if (!middleSensor){
+        left_motor_set_speed(9);
+        right_motor_set_speed(0);
+      }
+      else {
+        left_motor_set_speed(9);
+        right_motor_set_speed(-9);
       }
       
     }
-    else {
-      left_motor_set_speed(15);
-      right_motor_set_speed(0);
-      while(!rightSensor){
-        rightSensor = digitalRead(pinRightSensor);
-      }
-    }
-
-    counter++;
     
+    // crossroad
+    if ( !leftSensor && !rightSensor && started && counter < 3) {
+      STOP();
+      
+      // if (time - start_time < 12000){
+      if (counter == 0 && counter == 1){
+        left_motor_set_speed(0);
+        right_motor_set_speed(15);
+        while(!rightSensor){
+          rightSensor = digitalRead(pinRightSensor);
+        }
+        left_motor_set_speed(-6);
+        right_motor_set_speed(15);
+        while(rightSensor){
+          rightSensor = digitalRead(pinRightSensor);
+        }
+        
+      }
+      else {
+        left_motor_set_speed(15);
+        right_motor_set_speed(0);
+        while(!rightSensor){
+          rightSensor = digitalRead(pinRightSensor);
+        }
+      }
+  
+      counter++;
+      
+    }
   }
-
+  else {
+    left_motor_set_speed(0);
+    right_motor_set_speed(0);
+  }
 }
 
 
