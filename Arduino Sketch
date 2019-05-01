@@ -92,46 +92,62 @@ void loop() {
     }
   
     if (!frontSensor && started && counter > 2){
-      left_motor_set_speed(-15);
-      right_motor_set_speed(15);
-      delay(500);
+      left_motor_set_speed(-9);
+      right_motor_set_speed(9);
+      while(!middleSensor){
+        middleSensor = digitalRead(pinMiddleSensor);
+      }
+      while(middleSensor){
+        middleSensor = digitalRead(pinMiddleSensor);
+      }
+      
       left_motor_set_speed(15);
       right_motor_set_speed(15);
-      delay(3000);
-      left_motor_set_speed(0);
+      while(leftSensor || middleSensor){
+        leftSensor = digitalRead(pinLeftSensor);
+        middleSensor = digitalRead(pinMiddleSensor);
+      }
+      
+      left_motor_set_speed(0);  
       right_motor_set_speed(0);
       stopped = true;
     }
     
     // go forward
     if ( leftSensor && rightSensor && started) {
-      left_motor_set_speed(15);
-      right_motor_set_speed(15);
+        if (counter > 2) {
+          left_motor_set_speed(9);
+          right_motor_set_speed(9);
+        }
+        else {
+          left_motor_set_speed(15);
+          right_motor_set_speed(15);
+        }
     }
     
     // too right ==> turn left
     if ( !leftSensor && rightSensor && started) {
       // normal turn
       if (counter == 0){
-        left_motor_set_speed(9);
+        left_motor_set_speed(-4);
         right_motor_set_speed(15);
       }
       else if (counter == 1){
-        left_motor_set_speed(0);
-        right_motor_set_speed(12);
-      }
-      else if (counter == 2){
-        left_motor_set_speed(0);
+        left_motor_set_speed(-4);
         right_motor_set_speed(9);
       }
-      else if (!middleSensor){
-        left_motor_set_speed(0);
+      else if (counter > 1){
+        left_motor_set_speed(-4);
         right_motor_set_speed(9);
       }
-      else {
-        left_motor_set_speed(-9);
-        right_motor_set_speed(9);
-      }
+//      else if (!middleSensor){
+//        left_motor_set_speed(0);
+//        right_motor_set_speed(9);
+//      }
+//      else {
+//        left_motor_set_speed(-9);
+//        right_motor_set_speed(9);
+//      }
     }
     
     // too left ==> turn right
@@ -139,24 +155,24 @@ void loop() {
       // normal turn
       if (counter == 0){
         left_motor_set_speed(15);
-        right_motor_set_speed(9);
+        right_motor_set_speed(-4);
       }
       else if (counter == 1){
-        left_motor_set_speed(12);
-        right_motor_set_speed(0);
-      }
-      else if (counter == 2){
         left_motor_set_speed(9);
-        right_motor_set_speed(0);
+        right_motor_set_speed(-4);
       }
-      else if (!middleSensor){
+      else if (counter > 1){
         left_motor_set_speed(9);
-        right_motor_set_speed(0);
+        right_motor_set_speed(-4);
       }
-      else {
-        left_motor_set_speed(9);
-        right_motor_set_speed(-9);
-      }
+//      else if (!middleSensor){
+//        left_motor_set_speed(9);
+//        right_motor_set_speed(0);
+//      }
+//      else {
+//        left_motor_set_speed(9);
+//        right_motor_set_speed(-9);
+//      }
       
     }
     
@@ -165,24 +181,28 @@ void loop() {
       STOP();
       
       // if (time - start_time < 12000){
-      if (counter == 0 && counter == 1){
+      if (counter == 0 || counter == 1){
         left_motor_set_speed(0);
         right_motor_set_speed(15);
         while(!rightSensor){
           rightSensor = digitalRead(pinRightSensor);
         }
-        left_motor_set_speed(-6);
+        left_motor_set_speed(2);
         right_motor_set_speed(15);
         while(rightSensor){
           rightSensor = digitalRead(pinRightSensor);
         }
-        
       }
       else {
         left_motor_set_speed(15);
         right_motor_set_speed(0);
-        while(!rightSensor){
-          rightSensor = digitalRead(pinRightSensor);
+        while(!leftSensor){
+          leftSensor = digitalRead(pinLeftSensor);
+        }
+        left_motor_set_speed(15);
+        right_motor_set_speed(2);
+        while(leftSensor){
+          leftSensor = digitalRead(pinLeftSensor);
         }
       }
   
