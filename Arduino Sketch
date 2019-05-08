@@ -28,11 +28,9 @@ int rightSensor = 1;
 int middleSensor = 1;
 int frontSensor = 1;
 
-unsigned long time;
-unsigned long start_time;
+int counter = 0;
 bool started = false;
 bool stopped = false;
-int counter = 0;
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -70,18 +68,11 @@ void loop() {
     rightSensor = digitalRead(pinRightSensor);
     middleSensor = digitalRead(pinMiddleSensor);
     frontSensor =  digitalRead(pinFrontSensor);
-  
-    // update timer
-    time = millis();
-    Serial.println(time);
-  
-  
     
     /////////////////////// make decision/turning////////////////////////////
     
     // start when frontSensor sense something
     if (!frontSensor && !started) {
-      start_time = millis();
       left_motor_set_speed(15);
       right_motor_set_speed(15);
       started = true;
@@ -112,13 +103,13 @@ void loop() {
     
     // go forward
     if ( leftSensor && rightSensor && started) {
-        if (counter > 2) {
-          left_motor_set_speed(9);
-          right_motor_set_speed(9);
-        }
-        else {
+        if (counter <= 2) {
           left_motor_set_speed(15);
           right_motor_set_speed(15);
+        }
+        else {
+          left_motor_set_speed(9);
+          right_motor_set_speed(9);
         }
     }
     
@@ -129,11 +120,7 @@ void loop() {
         left_motor_set_speed(-4);
         right_motor_set_speed(15);
       }
-      else if (counter == 1){
-        left_motor_set_speed(-4);
-        right_motor_set_speed(9);
-      }
-      else if (counter > 1){
+      else if (counter >= 1){
         left_motor_set_speed(-4);
         right_motor_set_speed(9);
       }
@@ -146,11 +133,7 @@ void loop() {
         left_motor_set_speed(15);
         right_motor_set_speed(-4);
       }
-      else if (counter == 1){
-        left_motor_set_speed(9);
-        right_motor_set_speed(-4);
-      }
-      else if (counter > 1){
+      else if (counter >= 1){
         left_motor_set_speed(9);
         right_motor_set_speed(-4);
       }
@@ -193,7 +176,7 @@ void loop() {
     
   }
   
-  // if stopped == true ==> the track is finished
+  // else if stopped == true ==> the track is finished
   else {
     left_motor_set_speed(0);
     right_motor_set_speed(0);
